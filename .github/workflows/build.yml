@@ -1,8 +1,9 @@
+
 name: Build EggLedger APK
 
 on:
   push:
-    branches: [main]
+    branches: [ main ]
   workflow_dispatch:
 
 permissions:
@@ -11,49 +12,32 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    steps:
-      - name: Checkout project
-        uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
 
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '21'
+          java-version: '17'
 
-      - name: Set up Android SDK and accept licenses
-        uses: android-actions/setup-android@v3
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
         with:
-          accept-android-sdk-licenses: true
-          log-accepted-android-sdk-licenses: false
-          packages: 'platform-tools platforms;android-35 build-tools;35.0.0'
+          gradle-version: '8.9'
 
-      - name: Install dependencies
-        run: npm install
-
-      - name: Build web app
-        run: npm run build
-
-      - name: Create Android project
-        run: npx cap add android
-
-      - name: Sync Android project
-        run: npx cap sync android
+      - name: Extract project archive
+        run: unzip -o EggLedger-Android-v2.zip -d .
 
       - name: Build APK
-        run: |
-          cd android
-          chmod +x gradlew
-          ./gradlew --no-daemon assembleDebug
+        run: gradle -p eggledger_build assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: EggLedger-APK
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          name: EggLedger-debug-APK
+          path: eggledger_build/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
+          
