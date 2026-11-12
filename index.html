@@ -1,0 +1,137 @@
+
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>حسابداری تخم مرغ</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f3f5f8;color:#202938;font-family:Tahoma,Arial,sans-serif}
+header{background:linear-gradient(135deg,#123d36,#16765e);color:white;padding:25px 18px;border-radius:0 0 25px 25px}
+header h2{margin:0 0 8px;font-size:21px}
+header p{margin:0;color:#d5eee5;font-size:12px}
+main{padding:15px;max-width:600px;margin:auto}
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.card{background:white;padding:16px;border-radius:15px;box-shadow:0 3px 12px #00000008}
+.card small{color:#758195}
+.card strong{display:block;margin-top:10px;font-size:19px;color:#16765e}
+nav{display:flex;gap:7px;overflow:auto;margin:18px 0}
+nav button{white-space:nowrap;border:0;padding:12px 15px;border-radius:12px;background:white;color:#334155;font-weight:bold}
+nav button.active{background:#16765e;color:white}
+section{display:none;background:white;padding:17px;border-radius:17px}
+section.active{display:block}
+h3{margin-top:0}
+label{display:block;font-size:13px;margin:13px 0 7px}
+input,select{width:100%;padding:13px;border:1px solid #dce2e9;border-radius:10px;font:inherit;background:#fff}
+.action{width:100%;border:0;background:#16765e;color:white;padding:14px;border-radius:11px;font-weight:bold;margin-top:18px;font-size:15px}
+.item{padding:12px 0;border-bottom:1px solid #edf0f3;font-size:13px;line-height:2}
+.item b{color:#16765e}
+.muted{color:#778396;font-size:12px}
+.danger{background:#fff0f0;color:#c0392b;border:0;border-radius:7px;padding:6px 10px}
+</style>
+</head>
+<body>
+<header>
+<h2>🥚 حسابداری تخم‌مرغ</h2>
+<p id="date">مدیریت خرید، فروش و حساب مشتریان</p>
+</header>
+<main>
+<div class="cards">
+<div class="card"><small>موجودی شانه</small><strong id="stock">۰</strong></div>
+<div class="card"><small>فروش کل</small><strong id="sales">۰ تومان</strong></div>
+<div class="card"><small>سود تقریبی</small><strong id="profit">۰ تومان</strong></div>
+<div class="card"><small>طلب از مشتریان</small><strong id="debt">۰ تومان</strong></div>
+</div>
+<nav>
+<button class="active" onclick="tab('home',this)">خانه</button>
+<button onclick="tab('buy',this)">ثبت خرید</button>
+<button onclick="tab('sell',this)">ثبت فروش</button>
+<button onclick="tab('records',this)">سوابق</button>
+</nav>
+
+<section id="home" class="active">
+<h3>خلاصه حسابداری</h3>
+<p class="muted">اطلاعات با بستن برنامه از بین نمی‌رود.</p>
+<div id="summary"></div>
+</section>
+
+<section id="buy">
+<h3>ثبت خرید تخم‌مرغ</h3>
+<label>تعداد کارتن خریداری‌شده</label>
+<input id="cartons" type="number" min="1" placeholder="مثلاً ۲۰">
+<label>تعداد شانه در هر کارتن</label>
+<input id="perCarton" type="number" min="1" value="6">
+<label>قیمت خرید هر کارتن (تومان)</label>
+<input id="buyPrice" type="number" min="0" placeholder="مثلاً ۱۲۰۰۰۰۰">
+<button class="action" onclick="addBuy()">ثبت خرید</button>
+</section>
+
+<section id="sell">
+<h3>ثبت فروش</h3>
+<label>نام مشتری</label>
+<input id="customer" placeholder="نام مشتری">
+<label>تعداد شانه فروخته‌شده</label>
+<input id="qty" type="number" min="1" placeholder="مثلاً ۱۰">
+<label>قیمت فروش هر شانه (تومان)</label>
+<input id="price" type="number" min="0" placeholder="مثلاً ۲۲۰۰۰۰">
+<label>مبلغ دریافتی (تومان)</label>
+<input id="paid" type="number" min="0" placeholder="در صورت تسویه کامل، خالی بگذارید">
+<button class="action" onclick="addSale()">ثبت فروش</button>
+</section>
+
+<section id="records">
+<h3>آخرین سوابق</h3>
+<div id="history"></div>
+</section>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const fmt=n=>Math.round(n||0).toLocaleString('fa-IR');
+const date=()=>new Intl.DateTimeFormat('fa-IR-u-ca-persian').format(new Date());
+let data=JSON.parse(localStorage.getItem('eggLedgerData')||'{"stock":0,"cost":0,"sales":0,"debt":0,"profit":0,"records":[]}');
+function save(){localStorage.setItem('eggLedgerData',JSON.stringify(data));render()}
+function tab(id,btn){
+document.querySelectorAll('section').forEach(x=>x.classList.remove('active'));
+document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));
+$(id).classList.add('active');btn.classList.add('active');
+}
+function addBuy(){
+let c=+$('cartons').value,t=+$('perCarton').value,p=+$('buyPrice').value;
+if(!c||!t||!p){alert('لطفاً همه اطلاعات خرید را وارد کن');return}
+let count=c*t,total=c*p;
+data.stock+=count;
+data.cost=data.stock?((data.cost*(data.stock-count)+total)/data.stock):0;
+data.records.unshift({type:'خرید',detail:c+' کارتن، '+count+' شانه',amount:total,date:date()});
+$('cartons').value='';$('buyPrice').value='';
+save();alert('خرید با موفقیت ثبت شد');
+}
+function addSale(){
+let q=+$('qty').value,p=+$('price').value;
+let name=$('customer').value.trim()||'مشتری نقدی';
+let paid=$('paid').value===''?q*p:+$('paid').value;
+if(!q||!p||paid>q*p||paid<0){alert('اطلاعات فروش یا دریافتی صحیح نیست');return}
+if(q>data.stock){alert('موجودی کافی نیست');return}
+let total=q*p,debt=total-paid,profit=total-q*data.cost;
+data.stock-=q;data.sales+=total;data.debt+=debt;data.profit+=profit;
+data.records.unshift({type:'فروش',detail:name+'، '+q+' شانه',amount:total,paid,debt,profit,date:date()});
+$('qty').value='';$('price').value='';$('paid').value='';$('customer').value='';
+save();alert('فروش با موفقیت ثبت شد');
+}
+function removeRecord(i){
+if(!confirm('این سابقه حذف شود؟'))return;
+alert('برای جلوگیری از به‌هم‌خوردن حساب موجودی، حذف سوابق فعلاً غیرفعال است.');
+}
+function render(){
+$('stock').textContent=fmt(data.stock);
+$('sales').textContent=fmt(data.sales)+' تومان';
+$('profit').textContent=fmt(data.profit)+' تومان';
+$('debt').textContent=fmt(data.debt)+' تومان';
+$('date').textContent='امروز: '+date();
+$('summary').innerHTML='<p>موجودی فعلی: <b>'+fmt(data.stock)+' شانه</b></p><p>میانگین بهای خرید هر شانه: <b>'+fmt(data.cost)+' تومان</b></p><p>تعداد کل عملیات: <b>'+fmt(data.records.length)+'</b></p>';
+$('history').innerHTML=data.records.length?data.records.slice(0,50).map(r=>'<div class="item"><b>'+r.type+'</b> | '+r.date+'<br>'+r.detail+'<br>مبلغ: '+fmt(r.amount)+' تومان'+(r.debt?'<br>باقی‌مانده: '+fmt(r.debt)+' تومان':'')+'</div>').join(''):'هنوز سابقه‌ای ثبت نشده است.';
+}
+render();
+</script>
+</body>
+</html>
