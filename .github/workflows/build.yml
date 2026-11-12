@@ -1,4 +1,3 @@
-
 name: Build EggLedger APK
 
 on:
@@ -9,6 +8,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Get project
         uses: actions/checkout@v4
@@ -24,8 +24,14 @@ jobs:
           distribution: temurin
           java-version: 21
 
+      - name: Accept Android licenses
+        run: yes | sdkmanager --licenses || true
+
       - name: Setup Android
         uses: android-actions/setup-android@v3
+
+      - name: Accept Android licenses again
+        run: yes | sdkmanager --licenses
 
       - name: Install packages
         run: npm install
@@ -47,4 +53,3 @@ jobs:
         with:
           name: EggLedger-APK
           path: android/app/build/outputs/apk/debug/app-debug.apk
-          
