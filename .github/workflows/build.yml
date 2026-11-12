@@ -5,35 +5,35 @@ on:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Get project
+      - name: Checkout project
         uses: actions/checkout@v4
 
-      - name: Setup Node
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: '20'
 
-      - name: Setup Java
+      - name: Set up Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 21
+          java-version: '21'
 
-      - name: Accept Android licenses
-        run: yes | sdkmanager --licenses || true
-
-      - name: Setup Android
+      - name: Set up Android SDK and accept licenses
         uses: android-actions/setup-android@v3
+        with:
+          accept-android-sdk-licenses: true
+          log-accepted-android-sdk-licenses: false
+          packages: 'platform-tools platforms;android-35 build-tools;35.0.0'
 
-      - name: Accept Android licenses again
-        run: yes | sdkmanager --licenses
-
-      - name: Install packages
+      - name: Install dependencies
         run: npm install
 
       - name: Build web app
@@ -42,14 +42,18 @@ jobs:
       - name: Create Android project
         run: npx cap add android
 
-      - name: Sync Android
+      - name: Sync Android project
         run: npx cap sync android
 
       - name: Build APK
-        run: cd android && chmod +x gradlew && ./gradlew assembleDebug
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew --no-daemon assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: EggLedger-APK
           path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
