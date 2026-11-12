@@ -1,0 +1,7 @@
+
+{
+  "appId": "com.eggledger.app",
+  "appName": "حسابداری تخم مرغ",
+  "webDir": "dist",
+  "bundledWebRuntime": false
+}
